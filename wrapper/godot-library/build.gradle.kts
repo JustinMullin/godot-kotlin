@@ -22,12 +22,24 @@ kotlin {
             }
         }
 
+        sourceSets.create("jvmMain")
+        configure(listOf(sourceSets["jvmMain"])) {
+            kotlin.srcDirs("src/jvm/kotlin")
+            dependencies {
+                implementation(kotlin("stdlib-jdk8"))
+            }
+        }
+
         sourceSets.create("macosMain")
         sourceSets.create("linuxMain")
         sourceSets.create("windowsMain")
         configure(listOf(sourceSets["macosMain"], sourceSets["linuxMain"], sourceSets["windowsMain"])) {
             this.kotlin.srcDir("src/native/kotlin")
         }
+    }
+
+    if (project.hasProperty("localDev")) {
+        targetFromPreset(presets["jvm"], "jvm")
     }
 
     val targets =

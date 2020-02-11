@@ -156,3 +156,4 @@ gradle-app.setting
 #Generated Godot classes
 wrapper/godot-library/src/common/kotlin/godot/generated/
 wrapper/godot-library/src/native/kotlin/godot/generated/
+wrapper/godot-library/src/jvm/kotlin/godot/generated/

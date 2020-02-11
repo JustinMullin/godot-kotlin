@@ -287,6 +287,13 @@ class Class(
                                     " }"
                                 ).addModifiers(KModifier.PRIVATE, KModifier.FINAL)
                             }
+                            GeneratorTarget.Jvm -> {
+                                propertySpec.delegate("%L%M(\"${oldName}\",\"${method.oldName}\")%L",
+                                        "lazy·{ ",
+                                        MemberName("godot.utils", "getMB"),
+                                        " }"
+                                ).addModifiers(KModifier.PRIVATE, KModifier.FINAL)
+                            }
                         }.build())
                     }
                     else -> Unit

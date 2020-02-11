@@ -83,6 +83,8 @@ expect class GDArray { // FIXME: .copy
     fun min(): Variant
 
     fun shuffle()
+
+    override fun hashCode(): Int
 }
 
 fun Array<*>.toGDArray(): GDArray = GDArray(this)

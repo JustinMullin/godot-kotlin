@@ -191,7 +191,7 @@ actual class GDArray: CoreType { // FIXME: .copy
     }
 
 
-    override fun hashCode() : Int = godot_array_hash(nativeValue)
+    actual override fun hashCode() : Int = godot_array_hash(nativeValue)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

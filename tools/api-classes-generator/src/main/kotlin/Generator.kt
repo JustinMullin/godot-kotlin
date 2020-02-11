@@ -27,13 +27,14 @@ private fun generateSourceForTarget(target: GeneratorTarget, classes: List<Class
     }
 
     when (target) {
-        GeneratorTarget.Native -> {
+        GeneratorTarget.Native, GeneratorTarget.Jvm -> {
             val iCallFileSpec = FileSpec
                     .builder("godot.icalls", "__icalls")
-                    .addFunction(generateICallsVarargsFunction())
-                    .addImport("kotlinx.cinterop", "set", "get")
-                    .addImport("godot.core", "getRawMemory")
-                    .addImport("godot.core", "String")
+                    .applyIfTarget(target, GeneratorTarget.Native) {
+                        addImport("godot.core", "getRawMemory")
+                                .addImport("godot.core", "String")
+                    }
+                    .addFunction(generateICallsVarargsFunction(target))
 
             icalls.forEach { iCallFileSpec.addFunction(it.iCallSpec) }
 
@@ -48,25 +49,34 @@ private fun generateSourceForTarget(target: GeneratorTarget, classes: List<Class
     }
 }
 
-private fun generateICallsVarargsFunction(): FunSpec {
-    return FunSpec
+private fun generateICallsVarargsFunction(target: GeneratorTarget): FunSpec {
+    val baseSpec = FunSpec
             .builder("_icall_varargs")
             .addModifiers(KModifier.INTERNAL)
             .returns(ClassName("godot.core", "Variant"))
             .addParameter(
                     "mb",
-                    ClassName("kotlinx.cinterop", "CPointer")
-                            .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                    when (target) {
+                        GeneratorTarget.Native -> ClassName("kotlinx.cinterop", "CPointer")
+                                .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                        else -> ClassName("godot.gdnative", "godot_method_bind")
+                    }
             )
             .addParameter(
                     "inst",
-                    ClassName("kotlinx.cinterop", "COpaquePointer")
+                    when (target) {
+                        GeneratorTarget.Native -> ClassName("kotlinx.cinterop", "COpaquePointer")
+                        else -> ClassName("kotlin", "Any")
+                    }
             )
             .addParameter(
                     "arguments",
                     ClassName("kotlin", "Array").parameterizedBy(STAR)
             )
-            .addStatement(
+
+    return when (target) {
+        GeneratorTarget.Native -> {
+            baseSpec.addStatement(
                     """%M {
                             |    val args = %M<%T<%M>>(arguments.size)
                             |    for ((i,arg) in arguments.withIndex()) args[i] = %N.from(arg).nativeValue.ptr
@@ -83,6 +93,20 @@ private fun generateICallsVarargsFunction(): FunSpec {
                     MemberName("godot.gdnative", "godot_method_bind_call"),
                     MemberName("godot.gdnative", "godot_variant_destroy"),
                     MemberName("godot.core", "Variant")
-            )
-            .build()
+            ).build()
+        }
+        else -> {
+            baseSpec.addStatement(
+                    """val args = arguments.map { %N.from(it) }
+                       |val result = %M(mb, inst, args.toTypedArray(), arguments.size, null)
+                       |args.forEach(::%M)
+                       |return %N(result)
+                       |""".trimMargin(),
+                    MemberName("godot.core", "Variant"),
+                    MemberName("godot.gdnative", "godot_method_bind_call"),
+                    MemberName("godot.gdnative", "godot_variant_destroy"),
+                    MemberName("godot.core", "Variant")
+            ).build()
+        }
+    }
 }
