@@ -1,5 +1,4 @@
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 class ICall(
         var returnType: String,
@@ -45,13 +44,12 @@ class ICall(
                         ParameterSpec(
                                 "mb",
                                 when (target) {
-                                    GeneratorTarget.Native -> ClassName("kotlinx.cinterop", "CPointer")
-                                            .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                                    GeneratorTarget.Native -> target.pointerClass(ClassName("godot.gdnative", "godot_method_bind"))
                                     else -> ClassName("godot.gdnative", "godot_method_bind")
                                 }
                         )
                 )
-                .addParameter("inst", ClassName("kotlinx.cinterop", "COpaquePointer"))
+                .addParameter("inst", target.opaquePointerClass)
 
         addArgumentsToICall(spec)
 
@@ -59,94 +57,146 @@ class ICall(
         val shouldReturn = returnType != "Unit"
         val isPrimitive = returnType.isPrimitive()
 
-        addReturnTypeForICall(shouldReturn, spec, isPrimitive)
-        generateICallMethodBlock(shouldReturn, isPrimitive, spec)
+        addReturnTypeForICall(target, shouldReturn, spec, isPrimitive)
+        generateICallMethodBlock(target, shouldReturn, isPrimitive, spec)
 
         return spec.build()
     }
 
-    private fun generateICallMethodBlock(shouldReturn: Boolean, isPrimitive: Boolean, spec: FunSpec.Builder) {
-        val codeBlockBuilder = CodeBlock
-                .builder()
-                .add("%M {\n", MemberName("kotlinx.cinterop", "memScoped"))
+    private fun generateICallMethodBlock(target: GeneratorTarget, shouldReturn: Boolean, isPrimitive: Boolean, spec: FunSpec.Builder) {
+        val codeBlockBuilder = CodeBlock.builder()
 
-        if (shouldReturn) {
-            if (isPrimitive) {
-                codeBlockBuilder.add(
-                        "    val retVar = %M<%T>()\n",
-                        MemberName("kotlinx.cinterop", "alloc"),
-                        ClassName("kotlinx.cinterop", "${returnType}Var")
-                )
-            } else {
-                codeBlockBuilder.add(
-                        "    val retVar = %M<%T>(20)\n",
-                        MemberName("kotlinx.cinterop", "allocArray"),
-                        ClassName("kotlinx.cinterop", "ByteVar")
-                )
-            }
+        if (target == GeneratorTarget.Native) {
+            codeBlockBuilder.add("%M {\n", MemberName("kotlinx.cinterop", "memScoped"))
         }
 
-        codeBlockBuilder
-                .add(
-                        "    val args = %M<%T>(${arguments.size + 1})\n",
-                        MemberName("kotlinx.cinterop", "allocArray"),
-                        ClassName("kotlinx.cinterop", "COpaquePointerVar")
-                )
-                .add(
-                        buildString {
-                            arguments.withIndex().forEach {
-                                val i = it.index
-                                appendln("    args[$i] = arg$i${if (it.value.nullable) "?.getRawMemory(memScope)" else ".getRawMemory(memScope)"}\n")
-                            }
-                        }
-                )
-                .add("    args[${arguments.size}] = null\n")
+        generateArguments(target, codeBlockBuilder)
 
-        if (shouldReturn) {
-            if (isPrimitive) {
-                codeBlockBuilder.add(
-                        "    %M(mb, inst, args, retVar.%M)\n",
-                        MemberName("godot.gdnative", "godot_method_bind_ptrcall"),
-                        MemberName("kotlinx.cinterop", "ptr")
-                )
-                codeBlockBuilder.add(
-                        "    ret = retVar.%M\n",
-                        MemberName("kotlinx.cinterop", "value")
-                )
-            } else {
-                codeBlockBuilder.add(
-                        "    %M(mb, inst, args, retVar)\n",
-                        MemberName("godot.gdnative", "godot_method_bind_ptrcall")
-                )
-                codeBlockBuilder.add(
-                        "    ret = %T(retVar)\n",
-                        returnTypeClass
-                )
-            }
-        } else {
-            codeBlockBuilder.add(
-                    "    %M(mb, inst, args, null)\n",
-                    MemberName("godot.gdnative", "godot_method_bind_ptrcall")
-            )
+        generateCall(target, shouldReturn, isPrimitive, codeBlockBuilder)
+
+        if (target == GeneratorTarget.Native) {
+            codeBlockBuilder.add("}\n")
         }
 
-        codeBlockBuilder.add("}\n")
-
         if (shouldReturn) {
-            codeBlockBuilder.add("return ret")
+            when (target) {
+                GeneratorTarget.Native -> codeBlockBuilder.add("return ret")
+                GeneratorTarget.Jvm -> codeBlockBuilder.add("return ret as %T", returnTypeClass)
+                else -> Unit
+            }
         }
 
         spec.addCode(codeBlockBuilder.build())
     }
 
-    private fun addReturnTypeForICall(shouldReturn: Boolean, spec: FunSpec.Builder, isPrimitive: Boolean) {
-        if (shouldReturn) {
-            spec.returns(returnTypeClass)
-            if (isPrimitive) {
-                spec.addStatement("var ret: %N = ${returnType.defaultValue()}", returnTypeClass.simpleName)
-            } else {
-                spec.addStatement("lateinit var ret: %N", returnTypeClass.simpleName)
+    private fun generateArguments(target: GeneratorTarget, codeBlockBuilder: CodeBlock.Builder) {
+        when (target) {
+            GeneratorTarget.Native -> {
+                codeBlockBuilder
+                        .add(
+                                "    val args = %M<%T>(${arguments.size + 1})\n",
+                                MemberName("kotlinx.cinterop", "allocArray"),
+                                target.opaquePointerVarClass
+                        )
+                        .add(
+                                buildString {
+                                    arguments.withIndex().forEach {
+                                        val i = it.index
+                                        appendln("    args[$i] = arg$i${if (it.value.nullable) "?.getRawMemory(memScope)" else ".getRawMemory(memScope)"}\n")
+                                    }
+                                }
+                        )
+                        .add("    args[${arguments.size}] = null\n")
             }
+            GeneratorTarget.Jvm -> {
+                codeBlockBuilder
+                        .add(
+                                "val args = listOf("
+                        )
+                        .add(buildString {
+                            arguments.forEachIndexed { i, _ ->
+                                append("arg$i, ")
+                            }
+                            appendln("null)")
+                        })
+            }
+            else -> Unit
+        }
+    }
+
+    private fun generateCall(target: GeneratorTarget, shouldReturn: Boolean, isPrimitive: Boolean, codeBlockBuilder: CodeBlock.Builder) {
+        when (target) {
+            GeneratorTarget.Native -> {
+                if (shouldReturn) {
+                    if (isPrimitive) {
+                        codeBlockBuilder.add(
+                                "    val retVar = %M<%T>()\n",
+                                MemberName("kotlinx.cinterop", "alloc"),
+                                ClassName("kotlinx.cinterop", "${returnType}Var")
+                        )
+                    } else {
+                        codeBlockBuilder.add(
+                                "    val retVar = %M<%T>(20)\n",
+                                MemberName("kotlinx.cinterop", "allocArray"),
+                                ClassName("kotlinx.cinterop", "ByteVar")
+                        )
+                    }
+                }
+
+                if (shouldReturn) {
+                    if (isPrimitive) {
+                        codeBlockBuilder.add(
+                                "    %M(mb, inst, args, retVar.%M)\n",
+                                MemberName("godot.gdnative", "godot_method_bind_ptrcall"),
+                                MemberName("kotlinx.cinterop", "ptr")
+                        )
+                        codeBlockBuilder.add(
+                                "    ret = retVar.%M\n",
+                                MemberName("kotlinx.cinterop", "value")
+                        )
+                    } else {
+                        codeBlockBuilder.add(
+                                "    %M(mb, inst, args, retVar)\n",
+                                MemberName("godot.gdnative", "godot_method_bind_ptrcall")
+                        )
+                        codeBlockBuilder.add(
+                                "    ret = %T(retVar)\n",
+                                returnTypeClass
+                        )
+                    }
+                } else {
+                    codeBlockBuilder.add(
+                            "    %M(mb, inst, args, null)\n",
+                            MemberName("godot.gdnative", "godot_method_bind_ptrcall")
+                    )
+                }
+            }
+            GeneratorTarget.Jvm -> {
+                codeBlockBuilder.add(
+                        if (shouldReturn) "val ret = " else "    \n"
+                )
+                codeBlockBuilder.add(
+                        "%M(mb, inst, args, ${if (shouldReturn) "\"$returnType\"" else "null"})\n",
+                        MemberName("godot.gdnative", "godot_method_bind_ptrcall")
+                )
+            }
+            else -> Unit
+        }
+    }
+
+    private fun addReturnTypeForICall(target: GeneratorTarget, shouldReturn: Boolean, spec: FunSpec.Builder, isPrimitive: Boolean) {
+        spec.returns(returnTypeClass)
+        when (target) {
+            GeneratorTarget.Native -> {
+                if (shouldReturn) {
+                    if (isPrimitive) {
+                        spec.addStatement("var ret: %N = ${returnType.defaultValue()}", returnTypeClass.simpleName)
+                    } else {
+                        spec.addStatement("lateinit var ret: %N", returnTypeClass.simpleName)
+                    }
+                }
+            }
+            else -> Unit
         }
     }
 

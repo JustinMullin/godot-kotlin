@@ -13,7 +13,7 @@ internal fun getMB(cl: String, m: String): godot_method_bind {
 }
 
 
-internal fun getSingleton(cl: String, clOld: String): Any {
+internal fun getSingleton(cl: String, clOld: String): Long {
     return godot_global_get_singleton(cl) ?: throw NullPointerException("Cannot get singleton instance for class $clOld")
 }
 

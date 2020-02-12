@@ -46,13 +46,12 @@ class Class(
         val classTypeBuilder = createTypeBuilder(className, packageName)
             .actualIfImplementation(target)
             .expectIfInterface(target)
-        val cOpaquePointerClass = ClassName("kotlinx.cinterop", "COpaquePointer")
 
-        generateConstructors(target, classTypeBuilder, cOpaquePointerClass)
+        generateConstructors(target, classTypeBuilder)
         generateEnums(target, classTypeBuilder)
         generateSignals(target, classTypeBuilder)
 
-        val baseCompanion = createBaseCompanion(target, cOpaquePointerClass)
+        val baseCompanion = createBaseCompanion(target)
                 .actualIfImplementation(target)
         generateCasts(target, tree, baseCompanion)
         generateConstants(target, baseCompanion)
@@ -98,7 +97,7 @@ class Class(
                 .superclass(ClassName(packageName, if (baseClass.isEmpty()) "GodotObject" else baseClass))
     }
 
-    private fun generateConstructors(target: GeneratorTarget, typeBuilder: TypeSpec.Builder, cOpaquePointerClass: ClassName) {
+    private fun generateConstructors(target: GeneratorTarget, typeBuilder: TypeSpec.Builder) {
         val superConstructorName = when {
             isInstanciable && name != "Thread" -> "\"$name\""
             isInstanciable && name == "Thread" -> "\"_Thread\""
@@ -123,7 +122,7 @@ class Class(
                 typeBuilder.addFunction(
                         FunSpec.constructorBuilder()
                                 .addModifiers(KModifier.INTERNAL)
-                                .addParameter("mem", cOpaquePointerClass)
+                                .addParameter("mem", target.opaquePointerClass)
                                 .callSuperConstructor("mem")
                                 .build()
                 )
@@ -166,20 +165,20 @@ class Class(
         typeBuilder.addType(signalClassBuilder.build())
     }
 
-    private fun createBaseCompanion(target: GeneratorTarget, cOpaquePointerClass: ClassName): TypeSpec.Builder {
+    private fun createBaseCompanion(target: GeneratorTarget): TypeSpec.Builder {
         return TypeSpec.companionObjectBuilder().apply {
-            if (isSingleton && target == GeneratorTarget.Native) {
-                this.addAnnotation(ClassName("kotlin.native", "ThreadLocal"))
-                this.addProperty(createSingletonProperty(cOpaquePointerClass))
+            if (isSingleton && target.implementation) {
+                if (target == GeneratorTarget.Native) this.addAnnotation(ClassName("kotlin.native", "ThreadLocal"))
+                this.addProperty(createSingletonProperty(target))
             }
         }
     }
 
-    private fun createSingletonProperty(cOpaquePointerClass: ClassName): PropertySpec {
+    private fun createSingletonProperty(target: GeneratorTarget): PropertySpec {
         return PropertySpec
                 .builder(
                         "rawMemory",
-                        cOpaquePointerClass,
+                        target.opaquePointerClass,
                         KModifier.PRIVATE, KModifier.FINAL
                 )
                 .delegate("lazy·{ %M(\"$name\", \"$oldName\") }", MemberName("godot.utils", "getSingleton"))

@@ -1,16 +1,12 @@
 package godot.registration
 
 import godot.core.Variant
-import godot.core.VariantType
 import godot.gdnative.*
-
-private val registration = NativeHooks()
 
 fun registerClass(className: String,
                   baseClass: String,
-                  jvmName: String)
-{
-    registration.godot_wrapper_register_class(className, baseClass, jvmName)
+                  jvmName: String) {
+    godot_wrapper_register_class(className, baseClass, jvmName)
 }
 
 
@@ -18,9 +14,8 @@ fun registerMethod(className: String,
                    methodName: String,
                    jvmName: String,
                    signature: String,
-                   rpcMode: RPCMode = RPCMode.Disabled)
-{
-    registration.godot_wrapper_register_method(className, methodName, jvmName, signature, rpcMode.value)
+                   rpcMode: RPCMode = RPCMode.Disabled) {
+    godot_wrapper_register_method(className, methodName, jvmName, signature, rpcMode.value)
 }
 
 
@@ -40,7 +35,7 @@ fun registerProperty(className: String,
     if (visibleInEditor) {
         flags = flags or PropertyUsage.Editor
 
-        if (defaultValue.getType() == VariantType.OBJECT) {
+        if (defaultValue.getType() == Variant.Type.OBJECT) {
             if (propertyHint == PropertyHint.None) {
                 val res = Variant("Resource")
                 val result = defaultValue.call("is_class", arrayOf(res))
@@ -58,7 +53,7 @@ fun registerProperty(className: String,
         }
     }
 
-    registration.godot_wrapper_register_property(
+    godot_wrapper_register_property(
         className,
         jvmClassName,
         propertyName,
@@ -75,8 +70,18 @@ fun registerProperty(className: String,
 
 fun registerSignal(className: String,
                    name: String,
-                   arguments: Array<Pair<String, VariantType>> = arrayOf(),
-                   defaultArguments: Array<Variant> = arrayOf())
-{
-//    registration.godot_wrapper_register_signal(className, name.toGDString(), arguments.size,
+                   arguments: Array<Pair<String, Variant.Type>> = arrayOf(),
+                   defaultArguments: Array<Variant> = arrayOf()) {
+    val convertedArguments = arguments.map { arg ->
+        object : godot_signal_argument {
+            override val default_value: Variant get() = Variant.from("")
+            override var hint: godot_property_hint = godot_property_hint.GODOT_PROPERTY_HINT_NONE
+            override val hint_string: String = ""
+            override val name: String = arg.first
+            override var type: Int = arg.second.id.toInt()
+            override var usage: Int = 0
+        }
+    }
+
+    godot_wrapper_register_signal(className, name, arguments.size, convertedArguments.toTypedArray(), defaultArguments.size, defaultArguments)
 }

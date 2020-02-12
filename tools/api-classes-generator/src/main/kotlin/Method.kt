@@ -23,6 +23,7 @@ open class Method(
         returnType = returnType.convertTypeToKotlin()
     }
 
+    var shadowsProperty: Boolean = false
     var isGetterOrSetter: Boolean = false
 
     fun generate(target: GeneratorTarget, clazz: Class, tree: Graph<Class>, icalls: MutableSet<ICall>): FunSpec? {
@@ -40,6 +41,16 @@ open class Method(
                 .builder(name)
                 .addModifiers(modifiers)
                 .actualIfImplementation(target)
+
+        if (shadowsProperty) {
+            // Kotlin properties auto-produce getter+setter methods in the JVM bytecode, which can conflict with
+            // method names generated for the Godot API; here we overwrite the method name for the conflicting
+            // method to avoid compilation errors, and disable overriding the method (which could change the name)
+            generatedFunBuilder.modifiers.remove(KModifier.OPEN)
+            if (target == GeneratorTarget.Jvm) {
+                generatedFunBuilder.addAnnotation(AnnotationSpec.builder(JvmName::class).addMember("\"_$name\"").build())
+            }
+        }
 
         val shouldReturn = returnType != "Unit"
         if (shouldReturn) {
@@ -130,14 +141,10 @@ open class Method(
 
 
     private fun constructICall(target: GeneratorTarget, methodArguments: String, icalls: MutableSet<ICall>): Pair<String, String> {
-        val selfReference = when (target) {
-            GeneratorTarget.Native -> "this.rawMemory"
-            else -> "this"
-        }
-        if (hasVarargs) return "_icall_varargs" to "( ${name}MethodBind, $selfReference, arrayOf($methodArguments*__var_args))"
+        if (hasVarargs) return "_icall_varargs" to "( ${name}MethodBind, this.rawMemory, arrayOf($methodArguments*__var_args))"
 
         val icall = ICall(returnType, arguments)
         icalls.add(icall)
-        return icall.name to "( ${name}MethodBind, $selfReference$methodArguments)"
+        return icall.name to "( ${name}MethodBind, this.rawMemory$methodArguments)"
     }
 }

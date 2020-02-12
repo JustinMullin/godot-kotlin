@@ -143,6 +143,9 @@ class Property(
                 hasValidSetter = true
                 method.isGetterOrSetter = true
             }
+            "get${name.capitalize()}", "set${name.capitalize()}" -> {
+                method.shadowsProperty = true
+            }
         }
     }
 }

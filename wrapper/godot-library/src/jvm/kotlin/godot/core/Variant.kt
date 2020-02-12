@@ -88,6 +88,42 @@ actual class Variant: JniType {
         fun fromRawMemory(pointer: Long): Variant {
             return Variant().apply { nativePointer = pointer }
         }
+
+        infix fun from(value: Any?): Variant = when (value) {
+            null -> Variant()
+            is Variant -> Variant(value)
+            is Boolean -> Variant(value)
+            is Byte -> Variant(value)
+            is Long -> Variant(value)
+            is Int -> Variant(value)
+            is Short -> Variant(value)
+            is Float -> Variant(value)
+            is Double -> Variant(value)
+            is String -> Variant(value)
+            is GDArray -> Variant(value)
+            is PoolByteArray -> Variant(value)
+            is PoolIntArray -> Variant(value)
+            is PoolColorArray -> Variant(value)
+            is PoolRealArray -> Variant(value)
+            is PoolStringArray -> Variant(value)
+            is PoolVector2Array -> Variant(value)
+            is PoolVector3Array -> Variant(value)
+            is RID -> Variant(value)
+            is Dictionary -> Variant(value)
+            is NodePath -> Variant(value)
+            is Basis -> Variant(value)
+            is Color -> Variant(value)
+            is Vector2 -> Variant(value)
+            is Vector3 -> Variant(value)
+            is Quat -> Variant(value)
+            is AABB -> Variant(value)
+            is Transform -> Variant(value)
+            is Transform2D -> Variant(value)
+            is Rect2 -> Variant(value)
+            is Plane -> Variant(value)
+            is Object -> Variant(value)
+            else -> throw TypeCastException("Cannot create Variant from $value")
+        }
     }
 
     actual constructor() {

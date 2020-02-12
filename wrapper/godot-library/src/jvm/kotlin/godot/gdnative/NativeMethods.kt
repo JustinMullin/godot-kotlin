@@ -256,7 +256,7 @@ external fun godot_free(p_ptr: Any?)
 
 external fun godot_get_global_constants(): Dictionary
 
-external fun godot_global_get_singleton(p_name: String?): Any?
+external fun godot_global_get_singleton(p_name: String?): Long?
 
 external fun godot_variant_as_pool_real_array(p_self: Variant?): PoolRealArray
 
