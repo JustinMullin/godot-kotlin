@@ -25,9 +25,11 @@ open class Method(
 
     var isGetterOrSetter: Boolean = false
 
-    fun generate(target: GeneratorTarget, clazz: Class, tree: Graph<Class>, icalls: MutableSet<ICall>): FunSpec {
-        // Uncomment to disable method implementation generation
-        //if (isGetterOrSetter) return null
+    fun generate(target: GeneratorTarget, clazz: Class, tree: Graph<Class>, icalls: MutableSet<ICall>): FunSpec? {
+        if (isGetterOrSetter) {
+            return null
+        }
+
         val modifiers = mutableListOf<KModifier>()
 
         if (!clazz.isSingleton) {
@@ -60,8 +62,8 @@ open class Method(
 
         if (!isVirtual) {
             when (target) {
-                GeneratorTarget.Native -> {
-                    val constructedICall = constructICall(callArgumentsAsString, icalls)
+                GeneratorTarget.Native, GeneratorTarget.Jvm -> {
+                    val constructedICall = constructICall(target, callArgumentsAsString, icalls)
                     generatedFunBuilder.addStatement(
                         "%L%L%M%L%L",
                         if (shouldReturn) "return " else "",
@@ -82,7 +84,7 @@ open class Method(
         } else {
             if (shouldReturn) {
                 when (target) {
-                    GeneratorTarget.Native -> generatedFunBuilder.addStatement("%L %T(%S)", "throw", NotImplementedError::class, "$oldName is not implemented for ${clazz.name}")
+                    GeneratorTarget.Native, GeneratorTarget.Jvm -> generatedFunBuilder.addStatement("%L %T(%S)", "throw", NotImplementedError::class, "$oldName is not implemented for ${clazz.name}")
                     else -> Unit
                 }
             }
@@ -127,11 +129,15 @@ open class Method(
             }
 
 
-    private fun constructICall(methodArguments: String, icalls: MutableSet<ICall>): Pair<String, String> {
-        if (hasVarargs) return "_icall_varargs" to "( ${name}MethodBind, this.rawMemory, arrayOf($methodArguments*__var_args))"
+    private fun constructICall(target: GeneratorTarget, methodArguments: String, icalls: MutableSet<ICall>): Pair<String, String> {
+        val selfReference = when (target) {
+            GeneratorTarget.Native -> "this.rawMemory"
+            else -> "this"
+        }
+        if (hasVarargs) return "_icall_varargs" to "( ${name}MethodBind, $selfReference, arrayOf($methodArguments*__var_args))"
 
         val icall = ICall(returnType, arguments)
         icalls.add(icall)
-        return icall.name to "( ${name}MethodBind, this.rawMemory$methodArguments)"
+        return icall.name to "( ${name}MethodBind, $selfReference$methodArguments)"
     }
 }

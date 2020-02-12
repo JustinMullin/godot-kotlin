@@ -37,7 +37,6 @@ class Property(
     }
 
     fun generate(target: GeneratorTarget, clazz: Class, tree: Graph<Class>, icalls: MutableSet<ICall>): PropertySpec? {
-        if (!target.implementation) return null
         if (!hasValidGetter && !hasValidSetter) return null
 
         if (hasValidGetter && !validGetter.returnType.isEnum() && type != validGetter.returnType) {
@@ -47,9 +46,11 @@ class Property(
         // Sorry for this, CPUParticles has "scale" property overrides ancestor's "scale", but mismatches type
         if (clazz.name == "CPUParticles" && name == "scale") name = "_scale"
 
+        val ancestorsHaveProperty = tree.doAncestorsHaveProperty(clazz, this)
+
         val modifiers = mutableListOf<KModifier>()
         if (!clazz.isSingleton) {
-            modifiers.add(if (tree.doAncestorsHaveProperty(clazz, this)) KModifier.OVERRIDE else KModifier.OPEN)
+            modifiers.add(if (ancestorsHaveProperty) KModifier.OVERRIDE else KModifier.OPEN)
         }
 
         val propertyType = ClassName(type.getPackage(), type)
@@ -59,6 +60,14 @@ class Property(
                         propertyType,
                         modifiers
                 )
+                .actualIfImplementation(target)
+
+        if (!target.implementation) {
+            return propertySpecBuilder
+                    .mutable(hasValidSetter)
+                    .build()
+
+        }
 
         if (hasValidSetter) {
             propertySpecBuilder.mutable()

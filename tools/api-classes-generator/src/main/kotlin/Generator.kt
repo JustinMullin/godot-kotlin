@@ -22,6 +22,9 @@ private fun generateSourceForTarget(target: GeneratorTarget, classes: List<Class
 
     val icalls = mutableSetOf<ICall>()
 
+    classes.forEach {
+        it.applyGettersAndSettersForProperties(tree)
+    }
     classes.forEach { clazz ->
         clazz.generate(target, generatedPath, tree, icalls)
     }
@@ -36,7 +39,7 @@ private fun generateSourceForTarget(target: GeneratorTarget, classes: List<Class
                     }
                     .addFunction(generateICallsVarargsFunction(target))
 
-            icalls.forEach { iCallFileSpec.addFunction(it.iCallSpec) }
+            icalls.forEach { iCallFileSpec.addFunction(it.iCallSpec(target)) }
 
             val icallsFile = File(generatedPath)
             icallsFile.parentFile.mkdirs()
@@ -79,9 +82,9 @@ private fun generateICallsVarargsFunction(target: GeneratorTarget): FunSpec {
             baseSpec.addStatement(
                     """%M {
                             |    val args = %M<%T<%M>>(arguments.size)
-                            |    for ((i,arg) in arguments.withIndex()) args[i] = %N.from(arg).nativeValue.ptr
+                            |    for ((i,arg) in arguments.withIndex()) args.%M(i, %N.from(arg).nativeValue.ptr)
                             |    val result = %M(mb, inst, args, arguments.size, null)
-                            |    for (i in arguments.indices) %M(args[i])
+                            |    for (i in arguments.indices) %M(args.%M(i))
                             |    return %N(result)
                             |}
                             |""".trimMargin(),
@@ -89,9 +92,11 @@ private fun generateICallsVarargsFunction(target: GeneratorTarget): FunSpec {
                     MemberName("kotlinx.cinterop", "allocArray"),
                     ClassName("kotlinx.cinterop", "CPointerVar"),
                     MemberName("godot.gdnative", "godot_variant"),
+                    MemberName("kotlinx.cinterop", "set"),
                     MemberName("godot.core", "Variant"),
                     MemberName("godot.gdnative", "godot_method_bind_call"),
                     MemberName("godot.gdnative", "godot_variant_destroy"),
+                    MemberName("kotlinx.cinterop", "get"),
                     MemberName("godot.core", "Variant")
             ).build()
         }

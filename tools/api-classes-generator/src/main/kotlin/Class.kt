@@ -37,7 +37,6 @@ class Class(
 
 
     fun generate(target: GeneratorTarget, path: String, tree: Graph<Class>, icalls: MutableSet<ICall>) {
-        applyGettersAndSettersForProperties()
         if (!shouldGenerate) return
 
         val outputDirectory = getPathForGeneratedFiles(path)
@@ -78,8 +77,8 @@ class Class(
                 .writeTo(outputDirectory)
     }
 
-    private fun applyGettersAndSettersForProperties() {
-        properties.forEach { property ->
+    fun applyGettersAndSettersForProperties(tree: Graph<Class>) {
+        tree.getAllDescendingProperties(this).forEach { property ->
             methods.forEach { method ->
                 property.applyGetterOrSetter(method)
             }
@@ -128,6 +127,15 @@ class Class(
                                 .callSuperConstructor("mem")
                                 .build()
                 )
+                typeBuilder.addFunction(
+                        FunSpec.constructorBuilder()
+                                .addModifiers(KModifier.INTERNAL)
+                                .addParameter("name", String::class)
+                                .callSuperConstructor("name")
+                                .build()
+                )
+            }
+            GeneratorTarget.Jvm -> {
                 typeBuilder.addFunction(
                         FunSpec.constructorBuilder()
                                 .addModifiers(KModifier.INTERNAL)
@@ -189,7 +197,10 @@ class Class(
                             .actualIfImplementation(target)
                             .returns(ClassName("godot", name))
                             .addParameter("other", ClassName(if (node.value.name.isCoreType()) "godot.core" else "godot", node.value.name))
-                            .addStatement("return $name(\"\").apply·{ setRawMemory(other.rawMemory) }")
+                            .addStatement(when (target) {
+                                GeneratorTarget.Native -> "return $name(\"\").apply·{ setRawMemory(other.rawMemory) }"
+                                else -> "return other as $name"
+                            })
                             .build()
             )
             node = node.parent
@@ -200,7 +211,10 @@ class Class(
                         .actualIfImplementation(target)
                         .returns(ClassName("godot", name))
                         .addParameter("other", ClassName("godot.core", "Variant"))
-                        .addStatement("return %M($name(\"\"), other)", MemberName("godot.utils", "fromVariant"))
+                        .addStatement(when (target) {
+                            GeneratorTarget.Native -> "return %M($name(\"\"), other)"
+                            else -> "return %M(other)"
+                        }, MemberName("godot.utils", "fromVariant"))
                         .build()
         )
 
@@ -227,41 +241,43 @@ class Class(
             if (propertySpec != null) {
                 propertiesReceiverType.addProperty(propertySpec)
 
-                val parameterType = property.type
-                val parameterTypeName = ClassName(if (parameterType.isCoreType()) "godot.core" else "godot", parameterType)
+                if (target.implementation) {
+                    val parameterType = property.type
+                    val parameterTypeName = ClassName(if (parameterType.isCoreType()) "godot.core" else "godot", parameterType)
 
-                if (property.hasValidSetter && parameterType.isCoreTypeAdaptedForKotlin()) {
-                    val parameterName = property.name
-                    val propertyFunSpec = FunSpec.builder(parameterName)
+                    if (property.hasValidSetter && parameterType.isCoreTypeAdaptedForKotlin()) {
+                        val parameterName = property.name
+                        val propertyFunSpec = FunSpec.builder(parameterName)
 
-                    if (!isSingleton) {
-                        if (tree.doAncestorsHaveProperty(this, property)) {
-                            propertyFunSpec.addModifiers(KModifier.OVERRIDE)
-                        } else {
-                            propertyFunSpec.addModifiers(KModifier.OPEN)
+                        if (!isSingleton) {
+                            if (tree.doAncestorsHaveProperty(this, property)) {
+                                propertyFunSpec.addModifiers(KModifier.OVERRIDE)
+                            } else {
+                                propertyFunSpec.addModifiers(KModifier.OPEN)
+                            }
                         }
-                    }
 
-                    propertyFunSpec
-                            .addParameter(
-                                    ParameterSpec.builder(
-                                            "schedule",
-                                            LambdaTypeName.get(
-                                                    receiver = parameterTypeName,
-                                                    returnType = ClassName("kotlin", "Unit")
-                                            )
-                                    ).build()
-                            )
-                            .returns(parameterTypeName)
-                            .addStatement(
-                                    """return $parameterName.apply·{
+                        propertyFunSpec
+                                .addParameter(
+                                        ParameterSpec.builder(
+                                                "schedule",
+                                                LambdaTypeName.get(
+                                                        receiver = parameterTypeName,
+                                                        returnType = ClassName("kotlin", "Unit")
+                                                )
+                                        ).build()
+                                )
+                                .returns(parameterTypeName)
+                                .addStatement(
+                                        """return $parameterName.apply·{
                                                 |    schedule(this)
                                                 |    $parameterName = this
                                                 |}
                                                 |""".trimMargin()
-                            )
+                                )
 
-                    propertiesReceiverType.addFunction(propertyFunSpec.build())
+                        propertiesReceiverType.addFunction(propertyFunSpec.build())
+                    }
                 }
             }
         }
@@ -271,35 +287,32 @@ class Class(
         methods.forEach { method ->
             if (!method.isVirtual) {
                 when (target) {
-                    GeneratorTarget.Native -> {
+                    GeneratorTarget.Native, GeneratorTarget.Jvm -> {
                         val propertySpec = PropertySpec.builder(
                             "${method.name}MethodBind",
-                            ClassName("kotlinx.cinterop", "CPointer")
-                                .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                            when (target) {
+                                GeneratorTarget.Native -> ClassName("kotlinx.cinterop", "CPointer")
+                                        .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                                else -> ClassName("godot.gdnative", "godot_method_bind")
+                            }
                         )
 
-                        propertiesReceiverType.addProperty(when (target) {
-                            GeneratorTarget.Common -> propertySpec
-                            GeneratorTarget.Native -> {
-                                propertySpec.delegate("%L%M(\"${oldName}\",\"${method.oldName}\")%L",
-                                    "lazy·{ ",
-                                    MemberName("godot.utils", "getMB"),
-                                    " }"
-                                ).addModifiers(KModifier.PRIVATE, KModifier.FINAL)
-                            }
-                            GeneratorTarget.Jvm -> {
+                        propertiesReceiverType.addProperty(
                                 propertySpec.delegate("%L%M(\"${oldName}\",\"${method.oldName}\")%L",
                                         "lazy·{ ",
                                         MemberName("godot.utils", "getMB"),
                                         " }"
-                                ).addModifiers(KModifier.PRIVATE, KModifier.FINAL)
-                            }
-                        }.build())
+                                ).addModifiers(if (method.isGetterOrSetter) KModifier.PROTECTED else KModifier.PRIVATE, KModifier.FINAL)
+                                        .build())
                     }
                     else -> Unit
                 }
             }
-            propertiesReceiverType.addFunction(method.generate(target, this, tree, icalls))
+
+            val generated = method.generate(target, this, tree, icalls)
+            if (generated != null) {
+                propertiesReceiverType.addFunction(generated)
+            }
         }
     }
 }

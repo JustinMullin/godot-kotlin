@@ -7,8 +7,9 @@ class ICall(
 ) {
     private val returnTypeClass = createReturnTypeClass()
     val name: String = createICallName()
-    val iCallSpec by lazy {
-        generateICall()
+
+    fun iCallSpec(target: GeneratorTarget): FunSpec {
+        return generateICall(target)
     }
 
     init {
@@ -36,15 +37,18 @@ class ICall(
             if (returnType.isEnum()) "Long" else returnType
     )
 
-    private fun generateICall(): FunSpec {
+    private fun generateICall(target: GeneratorTarget): FunSpec {
         val spec = FunSpec
                 .builder(name)
                 .addModifiers(KModifier.INTERNAL)
                 .addParameter(
                         ParameterSpec(
                                 "mb",
-                                ClassName("kotlinx.cinterop", "CPointer")
-                                        .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                                when (target) {
+                                    GeneratorTarget.Native -> ClassName("kotlinx.cinterop", "CPointer")
+                                            .parameterizedBy(ClassName("godot.gdnative", "godot_method_bind"))
+                                    else -> ClassName("godot.gdnative", "godot_method_bind")
+                                }
                         )
                 )
                 .addParameter("inst", ClassName("kotlinx.cinterop", "COpaquePointer"))
