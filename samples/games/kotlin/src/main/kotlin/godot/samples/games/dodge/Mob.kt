@@ -19,7 +19,7 @@ class Mob: RigidBody2D() {
         visibilityNotifier2D = VisibilityNotifier2D from getNode(NodePath("VisibilityNotifier"))
 
         visibilityNotifier2D.connect("screen_exited", this, "_on_VisibilityNotifier2D_screen_exited")
-        animatedSprite.setAnimation(animationList[rand() % animationList.size])
+        animatedSprite.animation = animationList[rand() % animationList.size]
         animatedSprite.play()
     }
 

@@ -65,11 +65,11 @@ class Player : Area2D() {
         }
 
         if (velocity.x != 0.0) {
-            playerSprite.setAnimation("right")
+            playerSprite.animation = "right"
             playerSprite.flipV = false
             playerSprite.flipH = velocity.x < 0
         } else if (velocity.y != 0.0) {
-            playerSprite.setAnimation("up")
+            playerSprite.animation = "up"
             playerSprite.flipH = false
             playerSprite.flipV = velocity.y > 0
         }

@@ -2,8 +2,6 @@ package godot.gdnative
 
 import godot.core.*
 
-var api: godot_gdnative_core_api_struct? = null
-
 external fun godot_array_new_pool_byte_array(p_pba: PoolByteArray?): Long
 
 external fun godot_array_new_pool_color_array(p_pca: PoolColorArray?): Long

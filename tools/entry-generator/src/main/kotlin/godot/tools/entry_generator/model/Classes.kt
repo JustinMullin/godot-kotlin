@@ -34,6 +34,7 @@ import godot.gdnative.*
 import godot.core.*
 import godot.*
 import godot.registration.*
+import org.godotengine.kotlin.JvmBridge
 
 
 // NOTE THIS FILE IS AUTO-GENERATED
@@ -54,6 +55,8 @@ fun GDNativeTerminate(options: godot_gdnative_terminate_options) {
 @CName("godot_nativescript_init")
 fun NativeScriptInit(handle: COpaquePointer) {
     godot_wrapper_nativescript_init(handle)
+    
+    JvmBridge().kickoffJvm()
 
     // Let's do some registration magic.
             """.trimIndent())

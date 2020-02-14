@@ -312,7 +312,7 @@ actual class Variant: JniType {
 
     actual fun toTransform2D(): Transform2D = api?.godot_variant_as_transform2d!!(this)
 
-    actual fun getType(): Variant.Type = Variant.Type.fromInt(api?.godot_variant_get_type!!(this).toLong())
+    actual fun getType() = Type.fromInt(api?.godot_variant_get_type!!(this).toLong())
 
     actual fun call(str: String, args: Array<Variant>): Variant {
         return api?.godot_variant_call!!(this, str, args, args.size)

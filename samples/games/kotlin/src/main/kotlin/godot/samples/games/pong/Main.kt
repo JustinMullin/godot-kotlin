@@ -20,7 +20,7 @@ class Main: Node() {
 
     override fun _ready() {
         ball = KinematicBody2D from getNode(NodePath("Ball"))
-        ballStartPos = ball.getPosition()
+        ballStartPos = ball.position
         ballStartVel = Vector2(ball.get("xVel").toDouble(), ball.get("yVel").toDouble())
         startGame()
     }
@@ -31,8 +31,8 @@ class Main: Node() {
         ball.set("yVel", Variant(ballStartVel.y))
         val yourScoreLabel = Label from getNode(NodePath("YourScore"))
         val enemyScoreLabel = Label from getNode(NodePath("EnemyScore"))
-        yourScoreLabel.setText("YOU:\n$yourScore")
-        enemyScoreLabel.setText("ENEMY:\n$enemyScore")
+        yourScoreLabel.text = "YOU:\n$yourScore"
+        enemyScoreLabel.text = "ENEMY:\n$enemyScore"
     }
 
     fun _on_VisibilityNotifier2D_screen_exited() {

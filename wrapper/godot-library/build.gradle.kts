@@ -75,6 +75,15 @@ kotlin {
     }
 }
 
+// Need to set this up to run `cinterop -def src/native/c_interop/godot.def -flavor jvm`
+//tasks.register("cinteropGDNativeJvm") {
+//    org.jetbrains.kotlin.cli.ut
+//}
+//
+//tasks.getByName("cinteropGDNativeMacos") {
+//    finalizedBy(tasks.getByName("cinteropGDNativeJvm"))
+//}
+
 tasks.build {
     finalizedBy(tasks.publishToMavenLocal)
 }

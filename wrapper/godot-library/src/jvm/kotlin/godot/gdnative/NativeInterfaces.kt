@@ -444,7 +444,7 @@ interface godot_gdnative_core_api_struct {
 
     var godot_method_bind_get_method: ((String?, String?) -> godot_method_bind?)
 
-    var godot_method_bind_ptrcall: ((godot_method_bind?, Any?, Any?) -> Any?)
+    var godot_method_bind_ptrcall: ((godot_method_bind?, Any?, Any?, String) -> Any?)
 
     var godot_node_path_as_string: ((NodePath?) -> String)
 

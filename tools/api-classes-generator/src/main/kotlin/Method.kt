@@ -74,7 +74,7 @@ open class Method(
         if (!isVirtual) {
             when (target) {
                 GeneratorTarget.Native, GeneratorTarget.Jvm -> {
-                    val constructedICall = constructICall(target, callArgumentsAsString, icalls)
+                    val constructedICall = constructICall(callArgumentsAsString, icalls)
                     generatedFunBuilder.addStatement(
                         "%L%L%M%L%L",
                         if (shouldReturn) "return " else "",
@@ -140,7 +140,7 @@ open class Method(
             }
 
 
-    private fun constructICall(target: GeneratorTarget, methodArguments: String, icalls: MutableSet<ICall>): Pair<String, String> {
+    private fun constructICall(methodArguments: String, icalls: MutableSet<ICall>): Pair<String, String> {
         if (hasVarargs) return "_icall_varargs" to "( ${name}MethodBind, this.rawMemory, arrayOf($methodArguments*__var_args))"
 
         val icall = ICall(returnType, arguments)

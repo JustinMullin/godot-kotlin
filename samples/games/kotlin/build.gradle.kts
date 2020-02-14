@@ -77,6 +77,17 @@ kotlin {
                 this.target.binaries {
                     sharedLib(listOf(org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG))
                 }
+
+                cinterops {
+                    create("JNI") {
+                        defFile("src/native/c_interop/jni.def")
+                        includeDirs(
+                            "/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home/include/",
+                            "/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home/include/darwin"
+                        )
+                    }
+                }
+
                 this.target.compilations.all {
                     dependencies {
                         implementation("org.godotengine.kotlin:godot-library:1.0.0")

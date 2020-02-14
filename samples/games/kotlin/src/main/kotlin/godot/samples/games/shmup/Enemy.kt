@@ -12,7 +12,7 @@ class Enemy: Area2D() {
     override fun _ready() {
         addToGroup("enemies")
         bullet = NativeScript from ResourceLoader.load("res://Games/Shmup/Scripts/Bullet.gdns")
-        camera = getTree().getRoot().getNode(NodePath("Stage/Camera2D"))
+        camera = getTree().root.getNode(NodePath("Stage/Camera2D"))
     }
 
     override fun _process(delta: Double) {
@@ -26,7 +26,7 @@ class Enemy: Area2D() {
             if (bullet.instanceHas(obj)){
                 health--
                 if (health == 0){
-                    (AudioStreamPlayer2D from getTree().getRoot().getNode(NodePath("Stage/Explosion"))).play()
+                    (AudioStreamPlayer2D from getTree().root.getNode(NodePath("Stage/Explosion"))).play()
                     val args = godotArrayOf(0.2, 30, 3)
                     camera.callv("shake", args)
                     getParent().getParent().queueFree()

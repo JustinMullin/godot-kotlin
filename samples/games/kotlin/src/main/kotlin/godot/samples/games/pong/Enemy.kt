@@ -10,7 +10,7 @@ class Enemy: KinematicBody2D() {
     override fun _physics_process(delta: Double) {
         var velocity = Vector2()
         val ball = KinematicBody2D from getParent().getNode(NodePath("Ball"))
-        val ballPos = ball.getPosition()
+        val ballPos = ball.position
 
 
         if (ballPos.x > this.position.x)
