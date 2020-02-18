@@ -7,8 +7,9 @@ import kotlin.math.sqrt
 
 actual class Quat: JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Quat {
-            return Quat().apply { nativePointer = pointer }
+            return Quat().apply { rawMemory = pointer }
         }
     }
 

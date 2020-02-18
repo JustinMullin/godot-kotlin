@@ -85,8 +85,11 @@ actual class Variant: JniType {
     }
 
     actual companion object {
+        internal val noInit = NoInit()
+
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Variant {
-            return Variant().apply { nativePointer = pointer }
+            return Variant(noInit).apply { rawMemory = pointer }
         }
 
         infix fun from(value: Any?): Variant = when (value) {
@@ -127,211 +130,216 @@ actual class Variant: JniType {
     }
 
     actual constructor() {
-        nativePointer = api?.godot_variant_new_nil!!()
+        rawMemory = godot_variant_new_nil()
     }
 
     actual constructor(other: Variant) {
-        nativePointer = api?.godot_variant_new_copy!!(other)
+        GD.print("Invoking Variant copy constructor! Other variant is ${other.rawMemory}")
+        rawMemory = godot_variant_new_copy(other)
     }
 
     actual constructor(other: Boolean) {
-        nativePointer = api?.godot_variant_new_bool!!(other)
+        rawMemory = godot_variant_new_bool(other)
     }
 
     actual constructor(other: Byte) {
-        nativePointer = api?.godot_variant_new_int!!(other.toLong())
+        rawMemory = godot_variant_new_int(other.toLong())
     }
 
     actual constructor(other: Long) {
-        nativePointer = api?.godot_variant_new_int!!(other)
+        rawMemory = godot_variant_new_int(other)
     }
 
     actual constructor(other: Int) {
-        nativePointer = api?.godot_variant_new_int!!(other.toLong())
+        rawMemory = godot_variant_new_int(other.toLong())
     }
 
     actual constructor(other: Short) {
-        nativePointer = api?.godot_variant_new_int!!(other.toLong())
+        rawMemory = godot_variant_new_int(other.toLong())
     }
 
     actual constructor(other: Double) {
-        nativePointer = api?.godot_variant_new_real!!(other)
+        rawMemory = godot_variant_new_real(other)
     }
 
     actual constructor(other: Float) {
-        nativePointer = api?.godot_variant_new_real!!(other.toDouble())
+        rawMemory = godot_variant_new_real(other.toDouble())
     }
 
     actual constructor(other: String) {
-        nativePointer = api?.godot_variant_new_string!!(other)
+        rawMemory = godot_variant_new_string(other)
     }
 
     actual constructor(other: GDArray) {
-        nativePointer = api?.godot_variant_new_array!!(other)
+        rawMemory = godot_variant_new_array(other)
     }
 
     actual constructor(other: PoolByteArray) {
-        nativePointer = api?.godot_variant_new_pool_byte_array!!(other)
+        rawMemory = godot_variant_new_pool_byte_array(other)
     }
 
     actual constructor(other: PoolIntArray) {
-        nativePointer = api?.godot_variant_new_pool_int_array!!(other)
+        rawMemory = godot_variant_new_pool_int_array(other)
     }
 
     actual constructor(other: PoolColorArray) {
-        nativePointer = api?.godot_variant_new_pool_color_array!!(other)
+        rawMemory = godot_variant_new_pool_color_array(other)
     }
 
     actual constructor(other: PoolRealArray) {
-        nativePointer = api?.godot_variant_new_pool_real_array!!(other)
+        rawMemory = godot_variant_new_pool_real_array(other)
     }
 
     actual constructor(other: PoolStringArray) {
-        nativePointer = api?.godot_variant_new_pool_string_array!!(other)
+        rawMemory = godot_variant_new_pool_string_array(other)
     }
 
     actual constructor(other: PoolVector2Array) {
-        nativePointer = api?.godot_variant_new_pool_vector2_array!!(other)
+        rawMemory = godot_variant_new_pool_vector2_array(other)
     }
 
     actual constructor(other: PoolVector3Array) {
-        nativePointer = api?.godot_variant_new_pool_vector3_array!!(other)
+        rawMemory = godot_variant_new_pool_vector3_array(other)
     }
 
     actual constructor(other: RID) {
-        nativePointer = api?.godot_variant_new_rid!!(other)
+        rawMemory = godot_variant_new_rid(other)
     }
 
     actual constructor(other: Dictionary) {
-        nativePointer = api?.godot_variant_new_dictionary!!(other)
+        rawMemory = godot_variant_new_dictionary(other)
     }
 
     actual constructor(other: NodePath) {
-        nativePointer = api?.godot_variant_new_node_path!!(other)
+        rawMemory = godot_variant_new_node_path(other)
     }
 
     actual constructor(other: Basis) {
-        nativePointer = api?.godot_variant_new_basis!!(other)
+        rawMemory = godot_variant_new_basis(other)
     }
 
     actual constructor(other: Color) {
-        nativePointer = api?.godot_variant_new_color!!(other)
+        rawMemory = godot_variant_new_color(other)
     }
 
     actual constructor(other: Vector2) {
-        nativePointer = api?.godot_variant_new_vector2!!(other)
+        rawMemory = godot_variant_new_vector2(other)
     }
 
     actual constructor(other: Vector3) {
-        nativePointer = api?.godot_variant_new_vector3!!(other)
+        rawMemory = godot_variant_new_vector3(other)
     }
 
     actual constructor(other: Quat) {
-        nativePointer = api?.godot_variant_new_quat!!(other)
+        rawMemory = godot_variant_new_quat(other)
     }
 
     actual constructor(other: AABB) {
-        nativePointer = api?.godot_variant_new_aabb!!(other)
+        rawMemory = godot_variant_new_aabb(other)
     }
 
     actual constructor(other: Transform) {
-        nativePointer = api?.godot_variant_new_transform!!(other)
+        rawMemory = godot_variant_new_transform(other)
     }
 
     actual constructor(other: Transform2D) {
-        nativePointer = api?.godot_variant_new_transform2d!!(other)
+        rawMemory = godot_variant_new_transform2d(other)
     }
 
     actual constructor(other: Rect2) {
-        nativePointer = api?.godot_variant_new_rect2!!(other)
+        rawMemory = godot_variant_new_rect2(other)
     }
 
     actual constructor(other: Plane) {
-        nativePointer = api?.godot_variant_new_plane!!(other)
+        rawMemory = godot_variant_new_plane(other)
     }
 
     actual constructor(other: Object?) {
-        nativePointer = api?.godot_variant_new_object!!(other)
+        rawMemory = godot_variant_new_object(other)
     }
+
+    internal class NoInit {}
+    internal constructor(n: NoInit) // TODO: this is a weird hack to get around the shadowing of the no-arg constructor
 
     actual fun dispose() {
-        api?.godot_variant_destroy!!(this)
+        godot_variant_destroy(this)
     }
 
-    actual fun booleanize(): Boolean = api?.godot_variant_booleanize!!(this)
+    actual fun booleanize(): Boolean = godot_variant_booleanize(this)
 
-    actual fun toBoolean(): Boolean = api?.godot_variant_as_bool!!(this)
+    actual fun toBoolean(): Boolean = godot_variant_as_bool(this)
 
     actual fun toInt(): Int = this.toLong().toInt()
 
-    actual fun toObject(): Object = throw Exception("toObject not supported currently")//Object("").apply { setRawMemory(godot_variant_as_object(this) ?: throw NullPointerException("godot_variant_as_object return null for ${this@Variant}")) }
+    actual fun toObject(): Object = throw Exception("toObject not supported currently")
+    //Object("").apply { setRawMemory(godot_variant_as_object(this) ?: throw NullPointerException("godot_variant_as_object return null for ${this@Variant}")) }
 
-    actual fun toLong(): Long = api?.godot_variant_as_int!!(this)
+    actual fun toLong(): Long = godot_variant_as_int(this)
 
     actual fun toFloat(): Float = this.toDouble().toFloat()
 
-    actual fun toDouble(): Double = api?.godot_variant_as_real!!(this)
+    actual fun toDouble(): Double = godot_variant_as_real(this)
 
-    actual fun toDictionary(): Dictionary = Dictionary(api?.godot_variant_as_dictionary!!(this))
+    actual fun toDictionary(): Dictionary = Dictionary(godot_variant_as_dictionary(this))
 
-    actual fun toGDArray(): GDArray = GDArray(api?.godot_variant_as_array!!(this))
+    actual fun toGDArray(): GDArray = GDArray(godot_variant_as_array(this))
 
-    actual fun toNodePath(): NodePath = NodePath(api?.godot_variant_as_node_path!!(this))
+    actual fun toNodePath(): NodePath = NodePath(godot_variant_as_node_path(this))
 
-    actual fun toPoolByteArray(): PoolByteArray = PoolByteArray(api?.godot_variant_as_pool_byte_array!!(this))
+    actual fun toPoolByteArray(): PoolByteArray = PoolByteArray(godot_variant_as_pool_byte_array(this))
 
-    actual fun toPoolIntArray(): PoolIntArray = PoolIntArray(api?.godot_variant_as_pool_int_array!!(this))
+    actual fun toPoolIntArray(): PoolIntArray = PoolIntArray(godot_variant_as_pool_int_array(this))
 
-    actual fun toPoolColorArray(): PoolColorArray = PoolColorArray(api?.godot_variant_as_pool_color_array!!(this))
+    actual fun toPoolColorArray(): PoolColorArray = PoolColorArray(godot_variant_as_pool_color_array(this))
 
-    actual fun toPoolRealArray(): PoolRealArray = PoolRealArray(api?.godot_variant_as_pool_real_array!!(this))
+    actual fun toPoolRealArray(): PoolRealArray = PoolRealArray(godot_variant_as_pool_real_array(this))
 
-    actual fun toPoolStringArray(): PoolStringArray = PoolStringArray(api?.godot_variant_as_pool_string_array!!(this))
+    actual fun toPoolStringArray(): PoolStringArray = PoolStringArray(godot_variant_as_pool_string_array(this))
 
-    actual fun toPoolVector2Array(): PoolVector2Array = PoolVector2Array(api?.godot_variant_as_pool_vector2_array!!(this))
+    actual fun toPoolVector2Array(): PoolVector2Array = PoolVector2Array(godot_variant_as_pool_vector2_array(this))
 
-    actual fun toPoolVector3Array(): PoolVector3Array = PoolVector3Array(api?.godot_variant_as_pool_vector3_array!!(this))
+    actual fun toPoolVector3Array(): PoolVector3Array = PoolVector3Array(godot_variant_as_pool_vector3_array(this))
 
-    actual fun toBasis(): Basis = api?.godot_variant_as_basis!!(this)
+    actual fun toBasis(): Basis = godot_variant_as_basis(this)
 
-    actual fun toRID(): RID = api?.godot_variant_as_rid!!(this)
+    actual fun toRID(): RID = godot_variant_as_rid(this)
 
-    actual fun toQuat(): Quat = api?.godot_variant_as_quat!!(this)
+    actual fun toQuat(): Quat = godot_variant_as_quat(this)
 
-    actual fun toVector2(): Vector2 = api?.godot_variant_as_vector2!!(this)
+    actual fun toVector2(): Vector2 = godot_variant_as_vector2(this)
 
-    actual fun toVector3(): Vector3 = api?.godot_variant_as_vector3!!(this)
+    actual fun toVector3(): Vector3 = godot_variant_as_vector3(this)
 
-    actual fun toAABB(): AABB = api?.godot_variant_as_aabb!!(this)
+    actual fun toAABB(): AABB = godot_variant_as_aabb(this)
 
-    actual fun toPlane(): Plane = api?.godot_variant_as_plane!!(this)
+    actual fun toPlane(): Plane = godot_variant_as_plane(this)
 
-    actual fun toRect2(): Rect2 = api?.godot_variant_as_rect2!!(this)
+    actual fun toRect2(): Rect2 = godot_variant_as_rect2(this)
 
-    actual fun toTransform(): Transform = api?.godot_variant_as_transform!!(this)
+    actual fun toTransform(): Transform = godot_variant_as_transform(this)
 
-    actual fun toTransform2D(): Transform2D = api?.godot_variant_as_transform2d!!(this)
+    actual fun toTransform2D(): Transform2D = godot_variant_as_transform2d(this)
 
-    actual fun getType() = Type.fromInt(api?.godot_variant_get_type!!(this).toLong())
+    actual fun getType() = Type.fromInt(godot_variant_get_type(this).toLong())
 
     actual fun call(str: String, args: Array<Variant>): Variant {
-        return api?.godot_variant_call!!(this, str, args, args.size)
+        return godot_variant_call(this, str, args, args.size)
     }
 
-    actual fun hashCompare(other: Variant): Boolean = api?.godot_variant_hash_compare!!(this, other)
+    actual fun hashCompare(other: Variant): Boolean = godot_variant_hash_compare(this, other)
 
-    actual fun hasMethod(method: String): Boolean = api?.godot_variant_has_method!!(this, method)
+    actual fun hasMethod(method: String): Boolean = godot_variant_has_method(this, method)
 
     override fun equals(other: Any?): Boolean =
-        if(other is Variant) api?.godot_variant_operator_equal!!(this.nativePointer, other.nativePointer)
+        if(other is Variant) godot_variant_operator_equal(this.rawMemory, other.rawMemory)
         else false
 
-    override fun toString(): String = api?.godot_variant_as_string!!(this)
+    override fun toString(): String = godot_variant_as_string(this)
 
     operator fun compareTo(other: Variant) =
         when {
             this == other -> 0
-            api?.godot_variant_operator_less!!(this.nativePointer, other.nativePointer) -> -1
+            godot_variant_operator_less(this.rawMemory, other.rawMemory) -> -1
             else -> 1
         }
 

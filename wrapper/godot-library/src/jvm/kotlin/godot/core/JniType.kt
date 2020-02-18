@@ -1,8 +1,8 @@
 package godot.core
 
 open class JniType {
-    var nativePointer: Long = 0
+    var rawMemory: Long = 0
         internal set
 
-    open fun isNull(): Boolean = false
+    open fun isNull() = rawMemory == 0L
 }

@@ -3,8 +3,9 @@ package godot.core
 
 actual class Vector2 : Comparable<Vector2>, JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Vector2 {
-            return Vector2().apply { nativePointer = pointer }
+            return Vector2().apply { rawMemory = pointer }
         }
     }
 

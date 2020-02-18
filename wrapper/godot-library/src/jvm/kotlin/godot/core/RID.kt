@@ -6,17 +6,18 @@ import godot.Object
 
 actual class RID : JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): RID {
-            return RID().apply { nativePointer = pointer }
+            return RID().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-         nativePointer = godot_rid_new()
+         rawMemory = godot_rid_new()
     }
 
     actual constructor(other: Object) {
-        nativePointer = godot_rid_new_with_resource(other)
+        rawMemory = godot_rid_new_with_resource(other)
     }
 
 

@@ -6,19 +6,20 @@ import godot.gdnative.*
 
 actual class NodePath : JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): NodePath {
-            return NodePath().apply { nativePointer = pointer }
+            return NodePath().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-        nativePointer = godot_node_path_new(String())
+        rawMemory = godot_node_path_new(String())
     }
     actual constructor(other: String){
-        nativePointer = godot_node_path_new(other)
+        rawMemory = godot_node_path_new(other)
     }
     actual constructor(other: NodePath){
-        nativePointer = godot_node_path_new(other.toString())
+        rawMemory = godot_node_path_new(other.toString())
     }
 
 

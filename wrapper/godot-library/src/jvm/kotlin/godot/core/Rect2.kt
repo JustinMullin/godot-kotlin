@@ -3,8 +3,9 @@ package godot.core
 
 actual class Rect2: JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Rect2 {
-            return Rect2().apply { nativePointer = pointer }
+            return Rect2().apply { rawMemory = pointer }
         }
     }
 

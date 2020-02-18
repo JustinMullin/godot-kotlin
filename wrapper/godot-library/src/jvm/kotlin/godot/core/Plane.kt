@@ -3,8 +3,9 @@ package godot.core
 
 actual class Plane: JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Plane {
-            return Plane().apply { nativePointer = pointer }
+            return Plane().apply { rawMemory = pointer }
         }
     }
 

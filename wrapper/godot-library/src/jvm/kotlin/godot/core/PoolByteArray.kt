@@ -5,21 +5,22 @@ import godot.gdnative.*
 
 actual class PoolByteArray : JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): PoolByteArray {
-            return PoolByteArray().apply { nativePointer = pointer }
+            return PoolByteArray().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-         nativePointer = godot_pool_byte_array_new()
+         rawMemory = godot_pool_byte_array_new()
     }
 
     actual constructor(other: PoolByteArray) {
-         nativePointer = godot_pool_byte_array_new_copy(other)
+         rawMemory = godot_pool_byte_array_new_copy(other)
     }
 
     actual constructor(other: GDArray) {
-         nativePointer = godot_pool_byte_array_new_with_array(other)
+         rawMemory = godot_pool_byte_array_new_with_array(other)
     }
 
 

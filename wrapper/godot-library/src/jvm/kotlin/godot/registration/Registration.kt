@@ -84,5 +84,5 @@ fun registerSignal(className: String,
         }
     }
 
-    godot_wrapper_register_signal(className, name, arguments.size, convertedArguments.toTypedArray(), defaultArguments.size, defaultArguments)
+    godot_wrapper_register_signal(className, name, convertedArguments.toTypedArray(), defaultArguments)
 }

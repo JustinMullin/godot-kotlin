@@ -8,8 +8,9 @@ actual class Color : Comparable<Color>, JniType {
     actual var a: Double = 0.0
 
     actual companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Color {
-            return Color().apply { nativePointer = pointer }
+            return Color().apply { rawMemory = pointer }
         }
     }
 

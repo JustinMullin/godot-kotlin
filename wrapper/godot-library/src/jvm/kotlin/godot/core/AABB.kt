@@ -6,8 +6,9 @@ actual class AABB: JniType {
     actual var size: Vector3
 
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): AABB {
-            return AABB().apply { nativePointer = pointer }
+            return AABB().apply { rawMemory = pointer }
         }
     }
 

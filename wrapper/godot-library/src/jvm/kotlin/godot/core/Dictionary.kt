@@ -6,16 +6,17 @@ import godot.gdnative.*
 
 actual class Dictionary: JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Dictionary {
-            return Dictionary().apply { nativePointer = pointer }
+            return Dictionary().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-        nativePointer = godot_dictionary_new()
+        rawMemory = godot_dictionary_new()
     }
     actual constructor(other: Dictionary) {
-        nativePointer = godot_dictionary_new_copy(other)
+        rawMemory = godot_dictionary_new_copy(other)
     }
 
 

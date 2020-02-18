@@ -11,8 +11,9 @@ actual class Basis: JniType {
     actual var z: Vector3 = Vector3()
 
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Basis {
-            return Basis().apply { nativePointer = pointer }
+            return Basis().apply { rawMemory = pointer }
         }
     }
 

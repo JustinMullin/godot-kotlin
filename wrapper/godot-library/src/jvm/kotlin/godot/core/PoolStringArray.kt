@@ -6,21 +6,22 @@ import godot.gdnative.*
 
 actual class PoolStringArray : JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): PoolStringArray {
-            return PoolStringArray().apply { nativePointer = pointer }
+            return PoolStringArray().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-         nativePointer = godot_pool_string_array_new()
+         rawMemory = godot_pool_string_array_new()
     }
 
     actual constructor(other: PoolStringArray) {
-         nativePointer = godot_pool_string_array_new_copy(other)
+         rawMemory = godot_pool_string_array_new_copy(other)
     }
 
     actual constructor(other: GDArray) {
-         nativePointer = godot_pool_string_array_new_with_array(other)
+         rawMemory = godot_pool_string_array_new_with_array(other)
     }
 
 
@@ -29,7 +30,7 @@ actual class PoolStringArray : JniType {
     }
 
     actual fun appendArray(data: GDArray) {
-         nativePointer = godot_pool_string_array_new_with_array(data)
+         rawMemory = godot_pool_string_array_new_with_array(data)
     }
 
     actual fun insert(idx: Int, data: String) {

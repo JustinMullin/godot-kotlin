@@ -7,20 +7,21 @@ import godot.gdnative.*
 
 actual class GDArray: JniType { // FIXME: .copy
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): GDArray {
-            return GDArray().apply { nativePointer = pointer }
+            return GDArray().apply { rawMemory = pointer }
         }
     }
 
     actual constructor(size: Int, init: (Int) -> Variant) {
-        nativePointer = godot_array_new()
+        rawMemory = godot_array_new()
 
         for (i in 0 until size)
             append(init(i))
     }
 
     actual constructor(other: GDArray) {
-        nativePointer = godot_array_new_copy(other)
+        rawMemory = godot_array_new_copy(other)
     }
 
     actual constructor(other: Array<*>) : this() {
@@ -29,25 +30,25 @@ actual class GDArray: JniType { // FIXME: .copy
     }
 
     actual constructor(other: PoolByteArray) {
-         nativePointer = godot_array_new_pool_byte_array(other) }
+         rawMemory = godot_array_new_pool_byte_array(other) }
 
     actual constructor(other: PoolIntArray) {
-         nativePointer = godot_array_new_pool_int_array(other) }
+         rawMemory = godot_array_new_pool_int_array(other) }
 
     actual constructor(other: PoolRealArray) {
-         nativePointer = godot_array_new_pool_real_array(other) }
+         rawMemory = godot_array_new_pool_real_array(other) }
 
     actual constructor(other: PoolColorArray) {
-         nativePointer = godot_array_new_pool_color_array(other) }
+         rawMemory = godot_array_new_pool_color_array(other) }
 
     actual constructor(other: PoolVector2Array) {
-         nativePointer = godot_array_new_pool_vector2_array(other) }
+         rawMemory = godot_array_new_pool_vector2_array(other) }
 
     actual constructor(other: PoolVector3Array) {
-         nativePointer = godot_array_new_pool_vector3_array(other) }
+         rawMemory = godot_array_new_pool_vector3_array(other) }
 
     actual constructor(other: PoolStringArray) {
-         nativePointer = godot_array_new_pool_string_array(other) }
+         rawMemory = godot_array_new_pool_string_array(other) }
 
 
 

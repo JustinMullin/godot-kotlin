@@ -20,8 +20,7 @@ val footer = """
 }
 """
 
-// these methods are not available on x86_64; need to figure out if this file needs to be
-// generated per-platform (seems to be the case)
+// these methods are not available on x86_64; need to figure out if this list needs to be generated per-platform (seems to be the case)
 val notInTargetMethods = listOf(
         "godot_android_get_activity",
         "godot_android_get_env",
@@ -92,6 +91,8 @@ val customImplMethods = listOf(
         "godot_variant_call",
         "godot_register_native_call_type",
         "godot_method_bind_ptrcall",
+        "godot_method_bind_call",
+        "godot_method_bind_get_method",
         "godot_string_new_with_wide_string", // TODO: this looks like a constructor, but isn't
         "godot_variant_get_type", // TODO: not returning enum value properly right now
         "godot_variant_as_string", // TODO: not returning string properly right now
@@ -140,10 +141,10 @@ fun castForArg(arg: String, nextArg: String?, argType: String, nativeArgType: Na
     val nativeType = nativeArgType.baseType
     return when {
         argType.contains("[]") && primitives.contains(argType) -> {
-            "memScoped { jni.Get${argType.drop(argType.lastIndexOf(".")+1).dropLast(2)}ArrayElements!!.invoke(env, $arg, alloc<jbooleanVar>().ptr)?.reinterpret<${nativeArgType.baseType}>() }"
+            "memScoped { jni.Get${argType.drop(argType.lastIndexOf(".")+1).dropLast(2)}ArrayElements!!.invoke(env, $arg, alloc<jbooleanVar>().ptr)?.reinterpret<${nativeArgType.baseType}>(); checkErrors(\"error in casting array arg $nativeArgType\") }"
         }
         argType.contains("[]") -> {
-            val single = "jni.GetObjectArrayElement!!.invoke(env, $arg, i)!!"
+            val single = "jni.GetObjectArrayElement!!.invoke(env, $arg, i)!!.also { checkErrors(\"error in casting array arg $nativeArgType\") }"
             "(0 until $nextArg).map { i -> ${castForArg(single, null, argType.dropLast(2), nativeArgType)} }.toCValues()"
         }
 
@@ -201,12 +202,11 @@ private fun generateConstructorBinding(methodName: String, args: List<String>, c
     val gdType = methodName.take(newOffset)
     val inputType = methodName.drop(newOffset + 4).takeIf { it.isNotEmpty() }?.drop(1)
     return ("""
-        val returning = nativeHeap.alloc<$gdType>() // TODO: dealloc
-        $methodName(returning.ptr${if (args.isNotEmpty()) ", " else ""}${args.joinToString(", ") {
+        val returning = cValue<$gdType> { $methodName(this.ptr${if (args.isNotEmpty()) ", " else ""}${args.joinToString(", ") {
         argIndex += 1
         castForArg(('a' + argIndex).toString(), if (argIndex+1 >= args.size) null else ('a' + argIndex + 1).toString(), args[argIndex], methodData.args[argIndex+1])
-    }})
-        returning.ptr.toLong()
+    }}) }
+        returning.getPointer(arena).toLong()!!
 """).trimIndent()
 }
 

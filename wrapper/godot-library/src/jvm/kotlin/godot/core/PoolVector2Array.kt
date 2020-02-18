@@ -5,21 +5,22 @@ import godot.gdnative.*
 
 actual class PoolVector2Array : JniType {
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): PoolVector2Array {
-            return PoolVector2Array().apply { nativePointer = pointer }
+            return PoolVector2Array().apply { rawMemory = pointer }
         }
     }
 
     actual constructor() {
-         nativePointer = godot_pool_vector2_array_new()
+         rawMemory = godot_pool_vector2_array_new()
     }
 
     actual constructor(other: PoolVector2Array) {
-         nativePointer = godot_pool_vector2_array_new_copy(other)
+         rawMemory = godot_pool_vector2_array_new_copy(other)
     }
 
     actual constructor(other: GDArray) {
-         nativePointer = godot_pool_vector2_array_new_with_array(other)
+         rawMemory = godot_pool_vector2_array_new_with_array(other)
     }
 
 

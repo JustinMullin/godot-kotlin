@@ -56,8 +56,6 @@ external fun godot_arvr_get_texid(p_render_target: RID?): Int
 
 external fun godot_arvr_get_worldscale(): Double
 
-external fun godot_arvr_register_interface(p_interface: godot_arvr_interface_gdnative?)
-
 external fun godot_arvr_remove_controller(p_controller_id: Int)
 
 external fun godot_arvr_set_controller_axis(p_controller_id: Int, p_axis: Int, p_value: Double, p_can_be_negative: Boolean)
@@ -1281,11 +1279,11 @@ external fun godot_quat_operator_neg(p_self: Quat?): Quat
 
 external fun godot_is_instance_valid(p_object: Any?): Boolean
 
-external fun godot_method_bind_call(p_method_bind: godot_method_bind?, p_instance: Any?, p_args: Array<Variant>?, p_arg_count: Int, p_call_error: godot_variant_call_error?): Variant
+external fun godot_method_bind_call(p_method_bind: godot_method_bind, p_instance: Any?, p_args: Array<Any?>, p_arg_count: Int, p_call_error: godot_variant_call_error?): Variant
 
-external fun godot_method_bind_get_method(p_classname: String?, p_methodname: String?): godot_method_bind?
+external fun godot_method_bind_get_method(p_classname: String?, p_methodname: String?): Long
 
-external fun godot_method_bind_ptrcall(p_method_bind: godot_method_bind?, p_instance: Any?, p_args: Any?, p_return_type: String?): Any?
+external fun godot_method_bind_ptrcall(p_method_bind: godot_method_bind, p_instance: Any?, p_args: Array<Any?>, p_return_type: String?): Any?
 
 external fun godot_nativescript_get_global_type_tag(p_idx: Int, p_name: String?): Any?
 
@@ -1324,18 +1322,6 @@ external fun godot_nativescript_set_signal_documentation(p_gdnative_handle: Any?
 external fun godot_nativescript_set_type_tag(p_gdnative_handle: Any?, p_name: String?, p_type_tag: Any?)
 
 external fun godot_nativescript_unregister_instance_binding_data_functions(p_idx: Int)
-
-external fun godot_net_bind_multiplayer_peer(p_obj: Any?, arg1: godot_net_multiplayer_peer?)
-
-external fun godot_net_bind_packet_peer(p_obj: Any?, arg1: godot_net_packet_peer?)
-
-external fun godot_net_bind_stream_peer(p_obj: Any?, p_interface: godot_net_stream_peer?)
-
-external fun godot_net_bind_webrtc_data_channel(p_obj: Any?, arg1: godot_net_webrtc_data_channel?)
-
-external fun godot_net_bind_webrtc_peer_connection(p_obj: Any?, arg1: godot_net_webrtc_peer_connection?)
-
-external fun godot_net_set_webrtc_library(arg0: godot_net_webrtc_library?): godot_error
 
 external fun godot_node_path_as_string(p_self: NodePath?): String
 
@@ -1404,8 +1390,6 @@ external fun godot_plane_project(p_self: Plane?, p_point: Vector3?): Vector3
 external fun godot_plane_set_d(p_self: Plane?, p_d: Double)
 
 external fun godot_plane_set_normal(p_self: Plane?, p_normal: Vector3?)
-
-external fun godot_pluginscript_register_language(language_desc: godot_pluginscript_language_desc?)
 
 external fun godot_pool_byte_array_append(p_self: PoolByteArray?, p_data: Byte)
 
@@ -1540,8 +1524,6 @@ external fun godot_vector3_to_diagonal_matrix(p_self: Vector3?): Basis
 external fun godot_videodecoder_file_read(file_ptr: Any?, buf: Int?, buf_size: Int): Int
 
 external fun godot_videodecoder_file_seek(file_ptr: Any?, pos: Int, whence: Int): Int
-
-external fun godot_videodecoder_register_decoder(p_interface: godot_videodecoder_interface_gdnative?)
 
 external fun ___godot_wrapper_call_and_get(o: Any?, method_data: Any?, user_data: Any?, num_args: Int, args: Variant?): Variant
 

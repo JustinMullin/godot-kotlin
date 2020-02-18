@@ -6,8 +6,9 @@ actual class Transform: JniType {
     actual var origin: Vector3
 
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Transform {
-            return Transform().apply { nativePointer = pointer }
+            return Transform().apply { rawMemory = pointer }
         }
     }
 

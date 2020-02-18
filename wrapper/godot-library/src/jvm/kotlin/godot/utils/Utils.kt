@@ -1,11 +1,11 @@
 package godot.utils
 
 import godot.GodotObject
+import godot.core.Variant
 import godot.gdnative.godot_global_get_singleton
 import godot.gdnative.godot_method_bind
 import godot.gdnative.godot_method_bind_get_method
 import godot.gdnative.godot_variant_as_object
-import godot.core.Variant
 
 
 internal fun getMB(cl: String, m: String): godot_method_bind {

@@ -1,8 +1,6 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 package godot.core
 
-import kotlin.math.acos
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -20,8 +18,9 @@ actual class Transform2D: JniType {
     // and angle is measure from +X to +Y in a clockwise-fashion.
 
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Transform2D {
-            return Transform2D().apply { nativePointer = pointer }
+            return Transform2D().apply { rawMemory = pointer }
         }
     }
 

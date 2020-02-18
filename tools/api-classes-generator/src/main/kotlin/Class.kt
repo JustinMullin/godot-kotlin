@@ -168,8 +168,17 @@ class Class(
     private fun createBaseCompanion(target: GeneratorTarget): TypeSpec.Builder {
         return TypeSpec.companionObjectBuilder().apply {
             if (isSingleton && target.implementation) {
-                if (target == GeneratorTarget.Native) this.addAnnotation(ClassName("kotlin.native", "ThreadLocal"))
-                this.addProperty(createSingletonProperty(target))
+                if (target == GeneratorTarget.Native) {
+                    addAnnotation(ClassName("kotlin.native", "ThreadLocal"))
+                }
+                addProperty(createSingletonProperty(target))
+            }
+            if (target == GeneratorTarget.Jvm) {
+                addFunction(FunSpec.builder("fromRawMemory")
+                        .addAnnotation(AnnotationSpec.builder(JvmStatic::class).build())
+                        .addParameter("pointer", Long::class)
+                        .addStatement("return $name().apply { rawMemory·=·pointer }")
+                        .build())
             }
         }
     }

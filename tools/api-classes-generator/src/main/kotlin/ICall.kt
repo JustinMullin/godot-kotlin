@@ -111,13 +111,13 @@ class ICall(
             GeneratorTarget.Jvm -> {
                 codeBlockBuilder
                         .add(
-                                "val args = listOf("
+                                "val args = arrayOf<Any?>("
                         )
                         .add(buildString {
-                            arguments.forEachIndexed { i, _ ->
-                                append("arg$i, ")
-                            }
-                            appendln("null)")
+                            append(arguments.withIndex().joinToString(", ") { e ->
+                                "arg${e.index}"
+                            })
+                            appendln(")")
                         })
             }
             else -> Unit

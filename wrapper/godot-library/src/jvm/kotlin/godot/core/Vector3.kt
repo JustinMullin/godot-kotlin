@@ -13,8 +13,9 @@ actual class Vector3(actual var x: Double, actual var y: Double, actual var z: D
     }
 
     companion object {
+        @JvmStatic
         fun fromRawMemory(pointer: Long): Vector3 {
-            return Vector3().apply { nativePointer = pointer }
+            return Vector3().apply { rawMemory = pointer }
         }
     }
 
