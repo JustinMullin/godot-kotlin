@@ -37,7 +37,10 @@ private fun generateSourceForTarget(target: GeneratorTarget, classes: List<Class
                         addImport("godot.core", "getRawMemory")
                                 .addImport("godot.core", "String")
                     }
-                    .addFunction(generateICallsVarargsFunction(target))
+                    .applyIfTarget(target, GeneratorTarget.Jvm) {
+                        addImport("godot.core", "rawMemory")
+                    }
+                .addFunction(generateICallsVarargsFunction(target))
 
             icalls.forEach { iCallFileSpec.addFunction(it.iCallSpec(target)) }
 
@@ -103,7 +106,7 @@ private fun generateICallsVarargsFunction(target: GeneratorTarget): FunSpec {
         else -> {
             baseSpec.addStatement(
                     """val args = arguments.map { %N.from(it) }
-                       |val result = %M(mb, inst, args.toTypedArray(), arguments.size, null)
+                       |val result = %M(mb, inst, args.map { it.rawMemory }.toLongArray(), arguments.size, null)
                        |args.forEach(::%M)
                        |return %N(result)
                        |""".trimMargin(),

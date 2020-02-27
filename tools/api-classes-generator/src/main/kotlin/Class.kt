@@ -120,11 +120,11 @@ class Class(
         when (target) {
             GeneratorTarget.Native -> {
                 typeBuilder.addFunction(
-                        FunSpec.constructorBuilder()
-                                .addModifiers(KModifier.INTERNAL)
-                                .addParameter("mem", target.opaquePointerClass)
-                                .callSuperConstructor("mem")
-                                .build()
+                    FunSpec.constructorBuilder()
+                        .addModifiers(KModifier.INTERNAL)
+                        .addParameter("mem", target.opaquePointerClass)
+                        .callSuperConstructor("mem")
+                        .build()
                 )
                 typeBuilder.addFunction(
                         FunSpec.constructorBuilder()
@@ -135,6 +135,13 @@ class Class(
                 )
             }
             GeneratorTarget.Jvm -> {
+                typeBuilder.addFunction(
+                    FunSpec.constructorBuilder()
+                        .addModifiers(KModifier.INTERNAL)
+                        .addParameter("mem", target.opaquePointerClass)
+                        .callSuperConstructor("mem")
+                        .build()
+                )
                 typeBuilder.addFunction(
                         FunSpec.constructorBuilder()
                                 .addModifiers(KModifier.INTERNAL)
@@ -177,7 +184,7 @@ class Class(
                 addFunction(FunSpec.builder("fromRawMemory")
                         .addAnnotation(AnnotationSpec.builder(JvmStatic::class).build())
                         .addParameter("pointer", Long::class)
-                        .addStatement("return $name().apply { rawMemory·=·pointer }")
+                        .addStatement("return $name(pointer)")
                         .build())
             }
         }
@@ -207,7 +214,7 @@ class Class(
                             .addParameter("other", ClassName(if (node.value.name.isCoreType()) "godot.core" else "godot", node.value.name))
                             .addStatement(when (target) {
                                 GeneratorTarget.Native -> "return $name(\"\").apply·{ setRawMemory(other.rawMemory) }"
-                                else -> "return other as $name"
+                                else -> "return $name(\"\").apply·{ rawMemory·=·other.rawMemory }"
                             })
                             .build()
             )

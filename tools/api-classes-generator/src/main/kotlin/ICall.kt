@@ -111,11 +111,11 @@ class ICall(
             GeneratorTarget.Jvm -> {
                 codeBlockBuilder
                         .add(
-                                "val args = arrayOf<Any?>("
+                                "val args = longArrayOf("
                         )
                         .add(buildString {
                             append(arguments.withIndex().joinToString(", ") { e ->
-                                "arg${e.index}"
+                                "arg${e.index}${if (e.value.nullable) "?.rawMemory ?: 0" else ".rawMemory"}"
                             })
                             appendln(")")
                         })
@@ -172,12 +172,24 @@ class ICall(
                 }
             }
             GeneratorTarget.Jvm -> {
+                val callType = when {
+                    !shouldReturn -> "void"
+                    returnType == "String" -> "string"
+                    returnType == "Long" -> "long"
+                    returnType == "Double" -> "double"
+                    returnType == "Boolean" -> "boolean"
+                    else -> "object"
+                }
                 codeBlockBuilder.add(
                         if (shouldReturn) "val ret = " else "    \n"
                 )
                 codeBlockBuilder.add(
-                        "%M(mb, inst, args, ${if (shouldReturn) "\"$returnType\"" else "null"})\n",
-                        MemberName("godot.gdnative", "godot_method_bind_ptrcall")
+                        if (callType == "object") {
+                            "%M(mb, inst, args, \"${if (returnType.isCoreType()) "godot/core/" else "godot/"}$returnType\")\n"
+                        } else {
+                            "%M(mb, inst, args)\n"
+                        },
+                        MemberName("godot.gdnative", "godot_method_bind_ptrcall_$callType")
                 )
             }
             else -> Unit

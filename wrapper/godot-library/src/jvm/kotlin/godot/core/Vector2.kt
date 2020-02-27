@@ -1,6 +1,9 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 package godot.core
 
+import godot.gdnative.place_vector2
+import godot.gdnative.pull_vector2
+
 actual class Vector2 : Comparable<Vector2>, JniType {
     companion object {
         @JvmStatic
@@ -8,6 +11,18 @@ actual class Vector2 : Comparable<Vector2>, JniType {
             return Vector2().apply { rawMemory = pointer }
         }
     }
+
+    override var rawMemory: Long
+        get() = place_vector2(x, y)
+        set(pointer) {
+            GD.print("Setting Vector2 from pointer $pointer")
+            pull_vector2(pointer).let { other ->
+                GD.print("Populating Vector2 from pointer $pointer")
+                this.x = other.x
+                this.y = other.y
+            }
+            GD.print("Successfully set Vector2 from pointer $pointer")
+        }
 
     actual var x: Double = 0.0
     actual var y: Double = 0.0

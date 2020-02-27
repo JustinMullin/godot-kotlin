@@ -5,25 +5,24 @@ import godot.core.Variant
 import godot.gdnative.*
 
 fun registerClass(className: String,
-                  baseClass: String,
-                  jvmName: String) {
-    godot_wrapper_register_class(className, baseClass, jvmName)
+                  baseClass: String) {
+    godot_wrapper_register_class(className, baseClass)
 }
 
 
 fun registerMethod(className: String,
                    methodName: String,
-                   jvmName: String,
-                   signature: String,
+                   argumentTypes: List<String>,
+                   returnType: String,
                    rpcMode: RPCMode = RPCMode.Disabled) {
-    godot_wrapper_register_method(className, methodName, jvmName, signature, rpcMode.value)
+    godot_wrapper_register_method(className, methodName, argumentTypes.joinToString(" "), returnType, rpcMode.value)
 }
 
 
 fun registerProperty(className: String,
-                     jvmClassName: String,
                      visibleInEditor: Boolean,
                      propertyName: String,
+                     propertyClass: String,
                      defaultValue: Variant,
                      rpcMode: RPCMode = RPCMode.Disabled,
                      usageFlags: PropertyUsage = PropertyUsage.NoEditor,
@@ -56,8 +55,8 @@ fun registerProperty(className: String,
 
     godot_wrapper_register_property(
         className,
-        jvmClassName,
         propertyName,
+        propertyClass,
         defaultValue,
         defaultValue.getType().id.toInt(),
         rpcMode.value,

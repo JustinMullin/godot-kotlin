@@ -252,7 +252,7 @@ external fun godot_free(p_ptr: Any?)
 
 external fun godot_get_global_constants(): Dictionary
 
-external fun godot_global_get_singleton(p_name: String?): Long?
+external fun godot_global_get_singleton(p_name: String?): Long
 
 external fun godot_variant_as_pool_real_array(p_self: Variant?): PoolRealArray
 
@@ -1279,11 +1279,21 @@ external fun godot_quat_operator_neg(p_self: Quat?): Quat
 
 external fun godot_is_instance_valid(p_object: Any?): Boolean
 
-external fun godot_method_bind_call(p_method_bind: godot_method_bind, p_instance: Any?, p_args: Array<Any?>, p_arg_count: Int, p_call_error: godot_variant_call_error?): Variant
+external fun godot_method_bind_call(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray, p_arg_count: Int, p_call_error: godot_variant_call_error?): Variant
 
 external fun godot_method_bind_get_method(p_classname: String?, p_methodname: String?): Long
 
-external fun godot_method_bind_ptrcall(p_method_bind: godot_method_bind, p_instance: Any?, p_args: Array<Any?>, p_return_type: String?): Any?
+external fun godot_method_bind_ptrcall_object(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray, p_return_type: String?): Any?
+
+external fun godot_method_bind_ptrcall_string(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray): String
+
+external fun godot_method_bind_ptrcall_long(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray): Long
+
+external fun godot_method_bind_ptrcall_double(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray): Double
+
+external fun godot_method_bind_ptrcall_boolean(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray): Boolean
+
+external fun godot_method_bind_ptrcall_void(p_method_bind: godot_method_bind, p_instance: Any?, p_args: LongArray)
 
 external fun godot_nativescript_get_global_type_tag(p_idx: Int, p_name: String?): Any?
 

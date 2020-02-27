@@ -90,7 +90,6 @@ val notInTargetMethods = listOf(
 val customImplMethods = listOf(
         "godot_variant_call",
         "godot_register_native_call_type",
-        "godot_method_bind_ptrcall",
         "godot_method_bind_call",
         "godot_method_bind_get_method",
         "godot_string_new_with_wide_string", // TODO: this looks like a constructor, but isn't
@@ -102,8 +101,9 @@ val customImplMethods = listOf(
 )
 
 val excludedPrefixes = listOf(
-        "godot_nativescript_",
-        "godot_plane_intersect" // TODO: these shouldn't be excluded, just being lazy
+    "godot_method_bind_ptrcall", // ptrcall methods are prefixed in JvmBridge
+    "godot_nativescript_",
+    "godot_plane_intersect" // TODO: these shouldn't be excluded, just being lazy
 )
 
 val primitives = listOf("boolean", "byte", "char", "short", "int", "long", "float", "double")
@@ -149,7 +149,7 @@ fun castForArg(arg: String, nextArg: String?, argType: String, nativeArgType: Na
         }
 
         nativePrimitives.contains(nativeType) -> "$arg.to${nativePrimitives[nativeType]!!}()"
-        nativeType == "*" -> "$arg.asCoreType<COpaquePointerVar>()"
+        nativeType == "*" -> "$arg.pointerForCoreType<COpaquePointerVar>()"
         nativeType == "size_t" -> "$arg.toULong()" // TODO: not portable!
         nativeType == "ByteVar" -> "$arg.getStringValue().cstr"
         nativeType == "godot_string" -> "$arg.getStringValue().toGDString()"
@@ -168,13 +168,15 @@ fun castForArg(arg: String, nextArg: String?, argType: String, nativeArgType: Na
             val enumName = argType.removePrefix("godot.gdnative.")
             "$enumName.byValue($arg.asEnum(\"$enumName\").toUInt())"
         }
-        mapJvmType(argType) == "jobject" -> "$arg.asCoreType<$nativeType>()"
+        mapJvmType(argType) == "jobject" -> "$arg.pointerForCoreType<$nativeType>()"
         else -> "$arg"
     }
 }
 
-fun castForReturn(returnType: String): String {
+fun castForReturn(returnType: String, methodData: InteropMethod): String {
     return when {
+        returnType.endsWith("Long") && methodData.returnType.startsWith("COpaquePointer?") -> "?.rawValue?.toLong()"
+        returnType.endsWith("long") && methodData.returnType.startsWith("COpaquePointer") -> "!!.rawValue.toLong()"
         returnType.startsWith("godot.core.") -> "?.asCoreType(\"${returnType.removePrefix("godot.core.")}\")"
         else -> ""
     }
@@ -190,7 +192,7 @@ fun methodBody(methodName: String, args: List<String>, returnType: String, cinte
             "$pre$methodName(${args.joinToString(", ") {
                 argIndex += 1
                 castForArg(('a' + argIndex).toString(), if (argIndex+1 >= args.size) null else ('a' + argIndex + 1).toString(), args[argIndex], methodData.args[argIndex])
-            }})${castForReturn(returnType)}$post"
+            }})${castForReturn(returnType, methodData)}$post"
         }
     }
 }
@@ -242,7 +244,7 @@ fun main() {
         val name = line.removePrefix("external fun ").takeWhile { it != '(' }
         val rest = line.removePrefix("external fun ").drop(name.length)
         val lastColon = line.indexOfLast { it == ':' }
-        val returnType = line.drop(lastColon)
+        val returnType = line.drop(lastColon+1).trim()
         val args = rest.drop(1).dropLast(line.length - lastColon + 1).split("\\s*,\\s*".toRegex()).map { it.split(": ").last() }.map(::parseNativeArgument)
         InteropMethod(name, args, returnType)
     }
@@ -264,7 +266,7 @@ fun main() {
     |    registerNativeMethod("godot/gdnative/NativeMethodsKt", "$name",
     |        "$jniSignature",
     |        staticCFunction { _: CPointer<JNIEnvVar>, _: jobject${if (args.isNotEmpty()) ", " else ""}${args.joinToString(", ") { argIndex += 1; "${'a'+argIndex}: ${mapJvmType(it)}" } } ->
-    |        try {
+    |        try { GD.print("Invoking gdnative method '$name'")
     ${methodBody(name, args, returnType, cinteropMethods).lines().joinToString("\n") { "            $it" }}!!
     |        } catch (e: Exception) { throw Exception("error while invoking $name", e) } })""".trimMargin()
         }
